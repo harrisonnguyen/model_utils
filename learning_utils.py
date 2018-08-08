@@ -110,8 +110,13 @@ def lstm(network_input,state_ph,dropout_ph,early_stop_ph,
     return logits, current_state
     
 def create_summary(variables,types,names):
+    """
+    variables: a list of tensor variables
+    types: a list strings of either 'scalar','image','histogram' of same length as variables
+    names: a list of strings for the names of each summary
+    """
     for i in range(len(variables)):
-        if types[i] == 'scalar'
+        if types[i] == 'scalar':
             tf.summary.scalar(names[i], variables[i])
         elif types[i] == 'image':
             tf.summary.image(names[i], variables[i],max_outputs=2)
@@ -119,10 +124,10 @@ def create_summary(variables,types,names):
             tf.summary.histogram(names[i], variables[i], collections=['weights'])
         else:
             raise ValueError("Not valid summary type")
-     summary_op = tf.summary.merge_all()
-     weight_op = tf.summary.merge_all(key='weights')
+    summary_op = tf.summary.merge_all()
+    weight_op = tf.summary.merge_all(key='weights')
         
-     return summary_op,weight_op
+    return summary_op,weight_op
      
 def create_solver(loss,learning_rate_ph,decay_step_ph,params,optimiser='Adam'):
     global_step = tf.Variable(0,trainable=False,dtype=tf.int32)
@@ -133,7 +138,7 @@ def create_solver(loss,learning_rate_ph,decay_step_ph,params,optimiser='Adam'):
                                              lambda a,b: polynomial_decay(
                                               a,b,decay_steps=decay_step_ph), 
                                          optimizer=optimiser,
-                                         variables=params),
+                                         variables=params,
                                          summaries=["gradients"])
                                          
     return solver, global_step          
