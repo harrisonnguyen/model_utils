@@ -9,7 +9,7 @@ def get_params(layers):
         variables = tf.trainable_variables()
         params.append([v for v in variables if v.name.startswith(ele+'/')])
 
-    return params    
+    return params
 
 def polynomial_decay(a,b,decay_steps,end_learning_rate=2e-7,power=1.0):
     return tf.train.polynomial_decay(
@@ -19,45 +19,8 @@ def polynomial_decay(a,b,decay_steps,end_learning_rate=2e-7,power=1.0):
             end_learning_rate=end_learning_rate,
             power=power
         )
-        
-def conv_layer(x,filters,kernel_size,strides,activation,training_ph,use_batch_norm=True):
-    output = tf.contrib.layers.conv2d(
-                    inputs=x,
-                    num_outputs=filters,
-                    kernel_size=kernel_size,
-                    stride=strides,
-                    padding='same',
-                    activation_fn=None,
-                    weights_initializer=xavier_initializer_conv2d(),
-                )
-    if use_batch_norm:
-        output = tf.layers.batch_normalization(
-                    inputs=output,
-                    training=training_ph)
-    if activation is not None:
-        output = activation(output)
-    return output
 
 
-def conv_transpose_layer(x,filters,kernel_size,strides,
-                         activation,training_ph,use_batch_norm=True):
-    output = tf.contrib.layers.conv2d_transpose(
-                    inputs=x,
-                    num_outputs=filters,
-                    kernel_size=kernel_size,
-                    stride=strides,
-                    padding='same',
-                    activation_fn=None,
-                    weights_initializer=xavier_initializer_conv2d(),
-                )
-    if use_batch_norm:
-        output = tf.layers.batch_normalization(
-                    inputs=output,
-                    training=training_ph)
-    if activation is not None:
-        output = activation(output)
-    return output
-    
 def lstm(network_input,state_ph,dropout_ph,early_stop_ph,
           n_layers,state_size,n_labels,cell_type='gru'):
     # we produce the state of each layer into an element of an array
@@ -73,12 +36,12 @@ def lstm(network_input,state_ph,dropout_ph,early_stop_ph,
              for idx in range(n_layers)]
         )
         tf_cell = tf.nn.rnn_cell.LSTMCell
-    
-    
+
+
     #state_array = [int(state_size/i) for i in range(1,n_layers+1)]
     state_array = [state_size]*n_layers
     # forward pass
-    single_cell = [tf.nn.rnn_cell.DropoutWrapper(tf_cell(size),output_keep_prob=dropout_ph) 
+    single_cell = [tf.nn.rnn_cell.DropoutWrapper(tf_cell(size),output_keep_prob=dropout_ph)
                    for size in state_array]
     # combine cells
     cell = tf.nn.rnn_cell.MultiRNNCell(single_cell,
@@ -100,7 +63,7 @@ def lstm(network_input,state_ph,dropout_ph,early_stop_ph,
     # i.e. [[0, early_stop_ph[0]],[1,early_stop_ph[1]],[2, early_stop_ph[3]]...]
     index = tf.concat([tf.reshape(tf.range(0, tf.shape(early_stop_ph)[0], 1),[-1,1]),
                    tf.reshape(early_stop_ph-1,[-1,1])],axis=1)
-    last = tf.gather_nd(states_series,index)    
+    last = tf.gather_nd(states_series,index)
     # the transform for the output
     logits = tf.layers.dense(inputs=last,
                          units=n_labels,
@@ -108,7 +71,7 @@ def lstm(network_input,state_ph,dropout_ph,early_stop_ph,
                          use_bias=True)
 
     return logits, current_state
-    
+
 def create_summary(variables,types,names):
     """
     variables: a list of tensor variables
@@ -126,20 +89,19 @@ def create_summary(variables,types,names):
             raise ValueError("Not valid summary type")
     summary_op = tf.summary.merge_all()
     weight_op = tf.summary.merge_all(key='weights')
-        
+
     return summary_op,weight_op
-     
+
 def create_solver(loss,learning_rate_ph,decay_step_ph,params,optimiser='Adam'):
     global_step = tf.Variable(0,trainable=False,dtype=tf.int32)
     solver = tf.contrib.layers.optimize_loss(loss,
                                          global_step = global_step,
                                          learning_rate=learning_rate_ph,
-                                         learning_rate_decay_fn = 
+                                         learning_rate_decay_fn =
                                              lambda a,b: polynomial_decay(
-                                              a,b,decay_steps=decay_step_ph), 
+                                              a,b,decay_steps=decay_step_ph),
                                          optimizer=optimiser,
                                          variables=params,
                                          summaries=["gradients"])
-                                         
-    return solver, global_step          
-        
+
+    return solver, global_step
