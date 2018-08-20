@@ -67,13 +67,13 @@ def residual_block(x, filters,training_ph,kernel_size=3, stride=1,activation=tf.
                             None, training_ph,'instance',padding='valid')
     return x + output
 
-def conv_3Dlayer(x,filters,kernel_size,strides,activation,training_ph,batch_norm=None):
+def conv_3Dlayer(x,filters,kernel_size,strides,activation,training_ph,batch_norm=None,padding='same'):
     output = tf.layers.conv3d(
                 inputs=x,
                 filters=filters,
                 kernel_size=kernel_size,
                 strides=strides,
-                padding='same',
+                padding=padding,
                 activation=None,
                 kernel_initializer=xavier_initializer(),
                 bias_initializer=tf.zeros_initializer(),
@@ -96,7 +96,7 @@ def conv_transpose_3Dlayer(x,filters,kernel_size,strides,
                     filters=filters,
                     kernel_size=kernel_size,
                     strides=strides,
-                    padding='same',
+                    padding=padding,
                     activation=None,
                     kernel_initializer=xavier_initializer(),
                 )
