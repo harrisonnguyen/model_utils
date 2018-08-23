@@ -13,7 +13,7 @@ def write_tfrecord(file_name, data_array,feature_list,data_list,directory):
     # write the data
     if not os.path.exists(directory):
         os.makedirs(directory)
-    writer = tf.python_io.TFRecordWriter(directory+file_name +".tfrecords")
+    writer = tf.python_io.TFRecordWriter(os.path.join(directory,file_name +".tfrecords"))
 
         #iterate over each example
     for i in range(instances):
