@@ -64,7 +64,7 @@ def tfrecord_parser(serialized_example,feature_list,feature_type,feature_size):
 def create_tfrecord_queue(batch_size,parser_fn,queue_size,n_epochs=None):
     # filenames ffor validation/training
     filenames = tf.placeholder(tf.string, shape=[None])
-    batch_ph = tf.placeholder_with_default(BATCH_SIZE,())
+    batch_ph = tf.placeholder_with_default(batch_size,())
     dataset = tf.data.TFRecordDataset(filenames)
     
     if n_epochs is None:
