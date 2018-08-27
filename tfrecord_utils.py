@@ -36,23 +36,23 @@ def write_tfrecord(file_name, data_array,feature_list,data_list,directory):
         writer.write(serialized)
     #writer.close()
 
-    
+
 def tfrecord_parser(serialized_example,feature_list,feature_type,feature_size):
     """Parses a single tf.Example into image and label tensors.
        e.g feature_list = ['mfcc','melspec','length','label','id']
             feature_type = ['float','float','int','int','str']
             serialized_example = some_file.tfrecord
-    
+
     """
     # One needs to describe the format of the objects to be returned
-    
+
     features_dict = {}
     for i in range(len(feature_list)):
         if feature_type[i] == 'float':
             features_dict[feature_list[i]] = tf.FixedLenFeature([feature_size], tf.float32)
         elif feature_type[i] == 'int':
             features_dict[feature_list[i]] = tf.FixedLenFeature([], tf.int64)
-        elif feature_type[i] =='str':    
+        elif feature_type[i] =='str':
             features_dict[feature_list[i]] = tf.FixedLenFeature([],tf.string)
         else:
             raise ValueError('Not Valid data type')
@@ -60,19 +60,19 @@ def tfrecord_parser(serialized_example,feature_list,feature_type,feature_size):
                                         serialized_example,
                                         features=features_dict)
     return  [features[ele] for ele in feature_list]
-    
+
 def create_tfrecord_queue(batch_size,parser_fn,queue_size,n_epochs=None):
     # filenames ffor validation/training
     filenames = tf.placeholder(tf.string, shape=[None])
     batch_ph = tf.placeholder_with_default(batch_size,())
     dataset = tf.data.TFRecordDataset(filenames)
-    
+
     if n_epochs is None:
         # Repeat the input indefinitely.
         dataset = dataset.repeat()
     else:
          dataset = dataset.repeat(n_epochs)
-         
+
     #convert byte string to something meaningful
     # some parser functions thaty uses lambda x: parser_fn(x,...,,)
     dataset = dataset.map(parser_fn)
@@ -83,8 +83,27 @@ def create_tfrecord_queue(batch_size,parser_fn,queue_size,n_epochs=None):
     dataset = dataset.batch(tf.cast(batch_ph,tf.int64))
     iterator = dataset.make_initializable_iterator()
     iterator_next = iterator.get_next()
-    
-    return filenames, batch_ph,iterator,iterator_next
-    
-    
 
+    return filenames, batch_ph,iterator,iterator_next
+
+def get_files_in_dir(directories,file_format=None):
+    """
+    gets all files in all subolfders in the for the given directories
+
+    Args:
+        directories: an array of strings (directory names)
+        file_format: a string showing the fileformat to search for (e.g. ".jpg",".nii")
+
+    Returns:
+        A list of strings of files
+    """
+    files = []
+    for root in directories:
+        for path, subdirs, files in os.walk(root):
+            for name in files:
+                if file_format is not None:
+                    if file_format in name:
+                        files.append(os.path.join(path, name))
+                else:
+                    files.append(os.path.join(path, name))
+    return files
