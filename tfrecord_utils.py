@@ -61,30 +61,32 @@ def tfrecord_parser(serialized_example,feature_list,feature_type,feature_size):
                                         features=features_dict)
     return  [features[ele] for ele in feature_list]
 
-def create_tfrecord_queue(batch_size,parser_fn,queue_size,n_epochs=None):
+def create_tfrecord_queue(parser_fn,n_epochs=None,filename_ph=None,batch_ph=None):
     # filenames ffor validation/training
-    filenames = tf.placeholder(tf.string, shape=[None])
-    batch_ph = tf.placeholder_with_default(batch_size,())
-    dataset = tf.data.TFRecordDataset(filenames)
+    if filename_ph is None:
+        filename_ph = tf.placeholder(tf.string, shape=[None])
+    if batch_ph is None:
+        batch_ph = tf.placeholder(tf.int64,shape=())
+    dataset = tf.data.TFRecordDataset(filename_ph)
 
     if n_epochs is None:
         # Repeat the input indefinitely.
         dataset = dataset.repeat()
     else:
-         dataset = dataset.repeat(n_epochs)
+        dataset = dataset.repeat(n_epochs)
 
     #convert byte string to something meaningful
     # some parser functions thaty uses lambda x: parser_fn(x,...,,)
     dataset = dataset.map(parser_fn)
 
     # shuffler
-    dataset = dataset.shuffle(buffer_size=queue_size)
+    dataset = dataset.shuffle(buffer_size=batch_ph*5)
 
     dataset = dataset.batch(tf.cast(batch_ph,tf.int64))
     iterator = dataset.make_initializable_iterator()
     iterator_next = iterator.get_next()
 
-    return filenames, batch_ph,iterator,iterator_next
+    return iterator,iterator_next,filename_ph, batch_ph,
 
 def get_files_in_dir(directories,file_format=None):
     """
@@ -97,13 +99,13 @@ def get_files_in_dir(directories,file_format=None):
     Returns:
         A list of strings of files
     """
-    files = []
+    files_names = []
     for root in directories:
         for path, subdirs, files in os.walk(root):
             for name in files:
                 if file_format is not None:
                     if file_format in name:
-                        files.append(os.path.join(path, name))
+                        files_names.append(os.path.join(path, name))
                 else:
-                    files.append(os.path.join(path, name))
-    return files
+                    files_names.append(os.path.join(path, name))
+    return files_names
