@@ -12,7 +12,7 @@ def conv_layer(x,filters,kernel_size,strides,activation,training_ph,
                     activation=None,
                     kernel_initializer=xavier_initializer_conv2d(),
                 )
-    if batch_norm:
+    if batch_norm == 'batch':
         output = tf.layers.batch_normalization(
                     inputs=output,
                     training=training_ph)
