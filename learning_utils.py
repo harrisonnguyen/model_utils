@@ -92,16 +92,16 @@ def create_summary(variables,types,names):
 
     return summary_op,weight_op
 
-def create_solver(loss,learning_rate_ph,decay_step_ph,params,optimiser='Adam'):
-    global_step = tf.Variable(0,trainable=False,dtype=tf.int32)
+def create_solver(loss,global_step,learning_rate_ph,decay_step_ph,params,increment_global_step,optimiser='Adam',**kwargs):
+    #global_step = tf.Variable(0,trainable=False,dtype=tf.int32)
     solver = tf.contrib.layers.optimize_loss(loss,
-                                         global_step = global_step,
+                                         global_step=global_step,
                                          learning_rate=learning_rate_ph,
                                          learning_rate_decay_fn =
                                              lambda a,b: polynomial_decay(
-                                              a,b,decay_steps=decay_step_ph),
+                                              a,b,decay_steps=decay_step_ph,**kwargs),
                                          optimizer=optimiser,
                                          variables=params,
-                                         summaries=["gradients"])
-
-    return solver, global_step
+                                         summaries=["gradients"],
+                                         increment_global_step=increment_global_step)
+    return solver #, global_step
